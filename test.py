@@ -23,8 +23,8 @@ def test(data,
          weights=None,
          batch_size=32,
          imgsz=608,
-         conf_thres=0.001,
-         iou_thres=0.6,  # for NMS
+         conf_thres=0.002,
+         iou_thres=0.1,  # for NMS
          save_json=False,
          single_cls=False,
          augment=False,
@@ -90,7 +90,7 @@ def test(data,
                                        prefix=colorstr('test: ' if opt.task == 'test' else 'val: '))[0]
 
     seen = 0
-    confusion_matrix = ConfusionMatrix(nc=nc, conf=0.2, iou_thres=0.01) #DUZENLEME
+    confusion_matrix = ConfusionMatrix(nc=nc, conf=0.25, iou_thres=0.01) #DUZENLEME
     names = {k: v for k, v in enumerate(model.names if hasattr(model, 'names') else model.module.names)}
     coco91class = coco80_to_coco91_class()
     s = ('%20s' + '%12s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'mAP@.5', 'mAP@.5:.95')
