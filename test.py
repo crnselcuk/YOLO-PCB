@@ -24,7 +24,7 @@ def test(data,
          batch_size=32,
          imgsz=608,
          conf_thres=0.01,
-         iou_thres=0.5,  # for NMS
+         iou_thres=0.6,  # for NMS
          save_json=False,
          single_cls=False,
          augment=False,
@@ -118,7 +118,7 @@ def test(data,
             targets[:, 2:] *= torch.Tensor([width, height, width, height]).to(device)  # to pixels
             lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
             t = time_synchronized()
-            output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=min(iou_thres, 0.3), labels=lb, agnostic=True)
+            output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres, labels=lb, agnostic=True)
             t1 += time_synchronized() - t
 
         # Statistics per image
