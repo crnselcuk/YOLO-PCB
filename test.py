@@ -23,8 +23,8 @@ def test(data,
          weights=None,
          batch_size=32,
          imgsz=608,
-         conf_thres=0.2,
-         iou_thres=0.1,  # for NMS
+         conf_thres=0.25,
+         iou_thres=0.45,  # for NMS
          save_json=False,
          single_cls=False,
          augment=False,
