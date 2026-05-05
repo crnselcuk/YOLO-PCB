@@ -393,9 +393,9 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
                     kucuk_alan = torch.min(areas[i[idx]], areas[i[jdx]])
                     if inter_alan / (kucuk_alan + 1e-6) > 0.7:
                         if areas[i[idx]] > areas[i[jdx]]:
-                            silinecek[idx] = True
+                            silinecek[jdx] = True  # küçüğü sil
                         else:
-                            silinecek[jdx] = True
+                            silinecek[idx] = True  # küçüğü sil
         i = i[~silinecek]
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
