@@ -159,8 +159,8 @@ class ConfusionMatrix:
         try:
             import seaborn as sn
 
-            array = self.matrix / (self.matrix.sum(0).reshape(1, self.nc + 1) + 1E-6)  # normalize
-            array[array < 0.005] = np.nan  # don't annotate (would appear as 0.00)
+            array = self.matrix / (self.matrix.sum(1).reshape(self.nc + 1, 1) + 1E-6) #array = self.matrix / (self.matrix.sum(0).reshape(1, self.nc + 1) + 1E-6)  # normalize
+            array[array < 0.001] = np.nan #array[array < 0.005] = np.nan  # don't annotate (would appear as 0.00)
 
             fig = plt.figure(figsize=(12, 9), tight_layout=True)
             sn.set(font_scale=1.0 if self.nc < 50 else 0.8)  # for label size
