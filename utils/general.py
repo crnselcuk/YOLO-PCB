@@ -375,14 +375,15 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
         boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
-        # İç içe kutu düzeltmesi
-        areas = (boxes[:, 2]-boxes[:, 0]) * (boxes[:, 3]-boxes[:, 1])
+        # İç içe kutu düzeltmesi — gerçek koordinatlarla hesapla (class offset'siz)
+        real_boxes = x[:, :4]  # offset eklenmemiş gerçek koordinatlar
+        areas = (real_boxes[:, 2]-real_boxes[:, 0]) * (real_boxes[:, 3]-real_boxes[:, 1])
         silinecek = torch.zeros(len(i), dtype=torch.bool, device=boxes.device)
         for idx in range(len(i)):
             for jdx in range(len(i)):
                 if idx == jdx or silinecek[idx] or silinecek[jdx]:
                     continue
-                bi, bj = boxes[i[idx]], boxes[i[jdx]]
+                bi, bj = real_boxes[i[idx]], real_boxes[i[jdx]]
                 inter_x1 = torch.max(bi[0], bj[0])
                 inter_y1 = torch.max(bi[1], bj[1])
                 inter_x2 = torch.min(bi[2], bj[2])
