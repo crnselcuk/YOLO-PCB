@@ -375,8 +375,9 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
         boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
-        # İç içe kutu düzeltmesi — gerçek koordinatlarla hesapla (class offset'siz)
-        real_boxes = x[:, :4]  # offset eklenmemiş gerçek koordinatlar
+        # İç içe kutu düzeltmesi — daha yüksek conf'lu kutuyu tut
+        real_boxes = x[:, :4]
+        confs = x[:, 4]  # confidence skorları
         areas = (real_boxes[:, 2]-real_boxes[:, 0]) * (real_boxes[:, 3]-real_boxes[:, 1])
         silinecek = torch.zeros(len(i), dtype=torch.bool, device=boxes.device)
         for idx in range(len(i)):
@@ -392,10 +393,11 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
                     inter_alan = (inter_x2-inter_x1) * (inter_y2-inter_y1)
                     kucuk_alan = torch.min(areas[i[idx]], areas[i[jdx]])
                     if inter_alan / (kucuk_alan + 1e-6) > 0.7:
-                        if areas[i[idx]] > areas[i[jdx]]:
-                            silinecek[jdx] = True  # küçüğü sil
+                        # Alan değil, confidence'a göre karar ver — daha emin olanı tut
+                        if confs[i[idx]] > confs[i[jdx]]:
+                            silinecek[jdx] = True
                         else:
-                            silinecek[idx] = True  # küçüğü sil
+                            silinecek[idx] = True
         i = i[~silinecek]
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
