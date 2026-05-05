@@ -24,7 +24,7 @@ def test(data,
          batch_size=32,
          imgsz=608,
          conf_thres=0.01,
-         iou_thres=0.6,  # for NMS
+         iou_thres=0.5,  # for NMS
          save_json=False,
          single_cls=False,
          augment=False,
