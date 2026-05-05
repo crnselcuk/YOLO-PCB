@@ -375,15 +375,35 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
         boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
+        # İç içe kutu düzeltmesi
+        areas = (boxes[:, 2]-boxes[:, 0]) * (boxes[:, 3]-boxes[:, 1])
+        silinecek = torch.zeros(len(i), dtype=torch.bool, device=boxes.device)
+        for idx in range(len(i)):
+            for jdx in range(len(i)):
+                if idx == jdx or silinecek[idx] or silinecek[jdx]:
+                    continue
+                bi, bj = boxes[i[idx]], boxes[i[jdx]]
+                inter_x1 = torch.max(bi[0], bj[0])
+                inter_y1 = torch.max(bi[1], bj[1])
+                inter_x2 = torch.min(bi[2], bj[2])
+                inter_y2 = torch.min(bi[3], bj[3])
+                if inter_x2 > inter_x1 and inter_y2 > inter_y1:
+                    inter_alan = (inter_x2-inter_x1) * (inter_y2-inter_y1)
+                    kucuk_alan = torch.min(areas[i[idx]], areas[i[jdx]])
+                    if inter_alan / (kucuk_alan + 1e-6) > 0.7:
+                        if areas[i[idx]] > areas[i[jdx]]:
+                            silinecek[idx] = True
+                        else:
+                            silinecek[jdx] = True
+        i = i[~silinecek]
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
-        if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
-            # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
+        if merge and (1 < n < 3E3):  # Merge NMS
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
-            weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
+            weights = iou * scores[None]
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)
             if redundant:
-                i = i[iou.sum(1) > 1]  # require redundancy
+                i = i[iou.sum(1) > 1]
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
